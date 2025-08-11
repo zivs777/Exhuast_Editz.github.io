@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Carz Info</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+  body {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+  .container {
+    max-width: 600px;
+    width: 100%;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-weight: 700;
+    font-size: 2.4rem;
+    margin: 0;
+    letter-spacing: 2px;
+  }
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+  }
+  select, input[type="text"] {
+    flex-grow: 1;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+  button.toggle-btn {
+    background: #1db954;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #0f2027;
+    transition: background-color 0.3s ease;
+  }
+  button.toggle-btn:hover {
+    background: #17a34a;
+  }
+  #carList {
+    max-height: 450px;
+    overflow-y: auto;
+    border-radius: 10px;
+    background: rgba(255 255 255 / 0.1);
+    padding: 10px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.5);
+  }
+  .car-card {
+    background: rgba(255 255 255 / 0.12);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+  }
+  .car-card:hover {
+    background: rgba(29, 185, 84, 0.4);
+  }
+  .car-title {
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin: 0 0 5px 0;
+  }
+  .car-subtitle {
+    font-weight: 500;
+    font-size: 0.9rem;
+    opacity: 0.75;
+  }
+  /* Modal Styles */
+  .modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 100;
+    left: 0; top: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    justify-content: center;
+    align-items: center;
+  }
+  .modal.active {
+    display: flex;
+  }
+  .modal-content {
+    background: #121212;
+    padding: 25px 30px;
+    border-radius: 15px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 0 20px #1db954aa;
+    color: white;
+    position: relative;
+    text-align: center;
+    font-weight: 500;
+  }
+  .modal-content h2 {
+    margin-top: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    letter-spacing: 1.2px;
+  }
+  .modal-content p {
+    margin: 8px 0;
+    font-size: 1.1rem;
+  }
+  button.close-btn {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: #e63946;
+    border: none;
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  button.close-btn:hover {
+    background: #c12735;
+  }
+  /* Scrollbar styling for carList */
+  #carList::-webkit-scrollbar {
+    width: 8px;
+  }
+  #carList::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  #carList::-webkit-scrollbar-thumb {
+    background-color: #1db954;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Carz Info</h1>
+    </header>
+    <div class="controls">
+      <select id="brandFilter" onchange="renderCars()">
+        <!-- Options filled by JS -->
+      </select>
+      <input type="text" id="search" placeholder="Search brand or model" oninput="renderCars()" />
+      <button class="toggle-btn" onclick="toggleCars()" id="toggleBtn">Show Cars</button>
+    </div>
+    <div id="carList"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="carModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal()">×</button>
+      <h2 id="modalTitle"></h2>
+      <p id="modalHorsepower"></p>
+      <p id="modalZero"></p>
+      <p id="modalSpeed"></p>
+    </div>
+  </div>
+
+  <script>
+    const cars = [
+  // BMW
+  { brand: "BMW", model: "M2 Competition", horsepower: 405, zeroToHundred: 4.2, topSpeed: 280 },
+  { brand: "BMW", model: "M3 G80", horsepower: 473, zeroToHundred: 4.1, topSpeed: 250 },
+  { brand: "BMW", model: "M4 G82", horsepower: 473, zeroToHundred: 4.1, topSpeed: 250 },
+  { brand: "BMW", model: "M5 F90", horsepower: 600, zeroToHundred: 3.1, topSpeed: 305 },
+  { brand: "BMW", model: "M8 Coupe", horsepower: 617, zeroToHundred: 3.0, topSpeed: 305 },
+  { brand: "BMW", model: "M8 Convertible", horsepower: 617, zeroToHundred: 3.3, topSpeed: 305 },
+
+  // Mercedes
+  { brand: "Mercedes", model: "AMG GT R", horsepower: 577, zeroToHundred: 3.5, topSpeed: 318 },
+  { brand: "Mercedes", model: "S-Class W223", horsepower: 496, zeroToHundred: 4.9, topSpeed: 250 },
+  { brand: "Mercedes", model: "A45 AMG", horsepower: 416, zeroToHundred: 3.9, topSpeed: 270 },
+  { brand: "Mercedes", model: "GLE 63 AMG", horsepower: 603, zeroToHundred: 3.7, topSpeed: 280 },
+  { brand: "Mercedes", model: "C63 AMG", horsepower: 469, zeroToHundred: 4.0, topSpeed: 250 },
+  { brand: "Mercedes", model: "GLA 45 AMG", horsepower: 382, zeroToHundred: 4.3, topSpeed: 250 },
+  { brand: "Mercedes", model: "E53 AMG", horsepower: 429, zeroToHundred: 4.4, topSpeed: 250 },
+
+  // Lamborghini
+  { brand: "Lamborghini", model: "Aventador SVJ", horsepower: 770, zeroToHundred: 2.8, topSpeed: 350 },
+  { brand: "Lamborghini", model: "Huracán EVO", horsepower: 630, zeroToHundred: 2.9, topSpeed: 325 },
+  { brand: "Lamborghini", model: "Urus", horsepower: 641, zeroToHundred: 3.6, topSpeed: 305 },
+  { brand: "Lamborghini", model: "Huracán STO", horsepower: 640, zeroToHundred: 3.0, topSpeed: 310 },
+  { brand: "Lamborghini", model: "Sian FKP 37", horsepower: 819, zeroToHundred: 2.8, topSpeed: 350 },
+  { brand: "Lamborghini", model: "Countach LPI 800-4", horsepower: 814, zeroToHundred: 2.8, topSpeed: 355 },
+  { brand: "Lamborghini", model: "Essenza SCV12", horsepower: 830, zeroToHundred: 2.5, topSpeed: 350 },
+
+  // Bugatti
+  { brand: "Bugatti", model: "Chiron", horsepower: 1500, zeroToHundred: 2.4, topSpeed: 420 },
+  { brand: "Bugatti", model: "Divo", horsepower: 1500, zeroToHundred: 2.4, topSpeed: 380 },
+  { brand: "Bugatti", model: "Veyron", horsepower: 1001, zeroToHundred: 2.5, topSpeed: 407 },
+  { brand: "Bugatti", model: "Centodieci", horsepower: 1600, zeroToHundred: 2.4, topSpeed: 380 },
+  { brand: "Bugatti", model: "La Voiture Noire", horsepower: 1500, zeroToHundred: 2.5, topSpeed: 420 },
+  { brand: "Bugatti", model: "Bolide", horsepower: 1825, zeroToHundred: 2.2, topSpeed: 500 },
+  { brand: "Bugatti", model: "EB 110", horsepower: 560, zeroToHundred: 3.5, topSpeed: 342 },
+
+  // Ferrari
+  { brand: "Ferrari", model: "F8 Tributo", horsepower: 710, zeroToHundred: 2.9, topSpeed: 340 },
+  { brand: "Ferrari", model: "488 Pista", horsepower: 710, zeroToHundred: 2.85, topSpeed: 340 },
+  { brand: "Ferrari", model: "Roma", horsepower: 620, zeroToHundred: 3.4, topSpeed: 320 },
+  { brand: "Ferrari", model: "SF90 Stradale", horsepower: 986, zeroToHundred: 2.5, topSpeed: 340 },
+  { brand: "Ferrari", model: "Portofino M", horsepower: 612, zeroToHundred: 3.5, topSpeed: 320 },
+  { brand: "Ferrari", model: "812 Superfast", horsepower: 789, zeroToHundred: 2.9, topSpeed: 340 },
+  { brand: "Ferrari", model: "GTC4 Lusso", horsepower: 680, zeroToHundred: 3.4, topSpeed: 320 },
+
+  // McLaren
+  { brand: "McLaren", model: "720S", horsepower: 710, zeroToHundred: 2.9, topSpeed: 341 },
+  { brand: "McLaren", model: "P1", horsepower: 903, zeroToHundred: 2.8, topSpeed: 350 },
+  { brand: "McLaren", model: "Senna", horsepower: 800, zeroToHundred: 2.8, topSpeed: 340 },
+  { brand: "McLaren", model: "Artura", horsepower: 671, zeroToHundred: 3.0, topSpeed: 330 },
+  { brand: "McLaren", model: "570S", horsepower: 562, zeroToHundred: 3.2, topSpeed: 328 },
+  { brand: "McLaren", model: "650S", horsepower: 661, zeroToHundred: 3.0, topSpeed: 333 },
+  { brand: "McLaren", model: "765LT", horsepower: 755, zeroToHundred: 2.7, topSpeed: 330 },
+  { brand: "McLaren", model: "Elva", horsepower: 804, zeroToHundred: 2.8, topSpeed: 320 },
+  { brand: "McLaren", model: "MP4-12C", horsepower: 616, zeroToHundred: 3.1, topSpeed: 333 },
+  { brand: "McLaren", model: "Speedtail", horsepower: 1035, zeroToHundred: 2.9, topSpeed: 403 },
+
+  // Audi
+  { brand: "Audi", model: "A3 Sportback", horsepower: 201, zeroToHundred: 6.6, topSpeed: 240 },
+  { brand: "Audi", model: "A4", horsepower: 201, zeroToHundred: 7.3, topSpeed: 210 },
+  { brand: "Audi", model: "A5 Sportback", horsepower: 261, zeroToHundred: 5.7, topSpeed: 250 },
+  { brand: "Audi", model: "Q5", horsepower: 261, zeroToHundred: 5.9, topSpeed: 240 },
+  { brand: "Audi", model: "RS5 Coupe", horsepower: 444, zeroToHundred: 3.9, topSpeed: 280 },
+  { brand: "Audi", model: "RS7 Sportback", horsepower: 591, zeroToHundred: 3.5, topSpeed: 305 },
+  { brand: "Audi", model: "e-tron GT", horsepower: 637, zeroToHundred: 3.1, topSpeed: 245 },
+  { brand: "Audi", model: "R8 V10 Performance", horsepower: 620, zeroToHundred: 3.1, topSpeed: 331 },
+   
+  // Porsche
+  { brand: "Porsche", model: "911 Carrera", horsepower: 379, zeroToHundred: 4.0, topSpeed: 293 },
+  { brand: "Porsche", model: "911 Turbo S", horsepower: 640, zeroToHundred: 2.6, topSpeed: 330 },
+  { brand: "Porsche", model: "718 Cayman", horsepower: 300, zeroToHundred: 4.9, topSpeed: 275 },
+  { brand: "Porsche", model: "718 Boxster", horsepower: 300, zeroToHundred: 4.9, topSpeed: 275 },
+  { brand: "Porsche", model: "Taycan Turbo", horsepower: 670, zeroToHundred: 3.0, topSpeed: 260 },
+  { brand: "Porsche", model: "Panamera Turbo", horsepower: 550, zeroToHundred: 3.6, topSpeed: 306 },
+  { brand: "Porsche", model: "Macan GTS", horsepower: 375, zeroToHundred: 4.7, topSpeed: 261 },
+  { brand: "Porsche", model: "Cayenne Turbo", horsepower: 541, zeroToHundred: 3.9, topSpeed: 286 },
+  { brand: "Porsche", model: "911 GT3 RS", horsepower: 520, zeroToHundred: 3.0, topSpeed: 312 },
+  { brand: "Porsche", model: "911 Targa 4S", horsepower: 443, zeroToHundred: 3.6, topSpeed: 
+304 },
+ { brand: "Porsche", model: "918 Spyder", horsepower: 887, zeroToHundred: 2.6, topSpeed: 340 },
+];
+
+    let showCars = false;
+
+    function populateBrandFilter() {
+      const brandFilter = document.getElementById("brandFilter");
+      const brands = Array.from(new Set(cars.map(car => car.brand))).sort();
+      brandFilter.innerHTML = `<option value="all">All Brands</option>`;
+      brands.forEach(brand => {
+        brandFilter.innerHTML += `<option value="${brand}">${brand}</option>`;
+      });
+    }
+
+    function toggleCars() {
+      showCars = !showCars;
+      document.getElementById("toggleBtn").innerText = showCars ? "Hide Cars" : "Show Cars";
+      renderCars();
+    }
+
+    function renderCars() {
+      const searchText = document.getElementById("search").value.toLowerCase();
+      const brandFilter = document.getElementById("brandFilter").value;
+      const carList = document.getElementById("carList");
+      carList.innerHTML = "";
+
+      if (!showCars && searchText.trim() === "" && brandFilter === "all") {
+        return;
+      }
+
+      const filtered = cars.filter(car => {
+        const matchesBrand = brandFilter === "all" || car.brand === brandFilter;
+        const matchesSearch = car.brand.toLowerCase().includes(searchText) || car.model.toLowerCase().includes(searchText);
+        return matchesBrand && matchesSearch;
+      });
+
+      if(filtered.length === 0) {
+        carList.innerHTML = `<p style="text-align:center; color:#bbb; margin-top: 40px;">No cars found</p>`;
+        return;
+      }
+
+      filtered.forEach(car => {
+        const card = document.createElement("div");
+        card.className = "car-card";
+        card.innerHTML = `
+          <h3 class="car-title">${car.brand} ${car.model}</h3>
+          <p class="car-subtitle">Horsepower: ${car.horsepower} hp</p>
+          <p class="car-subtitle">0-100 km/h: ${car.zeroToHundred.toFixed(2)} sec</p>
+          <p class="car-subtitle">Top Speed: ${car.topSpeed} km/h</p>
+        `;
+        card.onclick = () => openModal(car);
+        carList.appendChild(card);
+      });
+    }
+
+    function openModal(car) {
+      document.getElementById("modalTitle").innerText = `${car.brand} ${car.model}`;
+      document.getElementById("modalHorsepower").innerText = `Horsepower: ${car.horsepower} hp`;
+      document.getElementById("modalZero").innerText = `0-100 km/h: ${car.zeroToHundred.toFixed(2)} sec`;
+      document.getElementById("modalSpeed").innerText = `Top Speed: ${car.topSpeed} km/h`;
+      document.getElementById("carModal").classList.add("active");
+    }
+
+    function closeModal() {
+      document.getElementById("carModal").classList.remove("active");
+    }
+
+    window.onload = () => {
+      populateBrandFilter();
+      renderCars();
+    };
+  </script>
+</body>
+</html>
