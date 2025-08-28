@@ -1,295 +1,107 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Carz Info</title>
+<!-- 🚗 Car Quiz Section -->
+<div class="quiz-box">
+  <h1>🚗 Ultimate Car Quiz 🚗</h1>
+  <p id="question">Click start to begin!</p>
+  <div id="answers"></div>
+  <button onclick="startQuiz()">Start Quiz</button>
+  <p id="score"></p>
+</div>
+
+<script>
+const quiz = [
+  {
+    question: "Which company makes the Mustang?",
+    options: ["Chevrolet", "Ford", "Dodge", "Tesla"],
+    answer: "Ford"
+  },
+  {
+    question: "What does BMW stand for?",
+    options: ["British Motor Works", "Bayerische Motoren Werke", "Berlin Motor World", "Bavaria Motors West"],
+    answer: "Bayerische Motoren Werke"
+  },
+  {
+    question: "Which Italian brand uses a prancing horse as its logo?",
+    options: ["Lamborghini", "Ferrari", "Maserati", "Alfa Romeo"],
+    answer: "Ferrari"
+  },
+  {
+    question: "The Bugatti Veyron was once the fastest car in the world. True or False?",
+    options: ["True", "False"],
+    answer: "True"
+  },
+  {
+    question: "Which car company makes the '911' model?",
+    options: ["McLaren", "Porsche", "Audi", "Mercedes"],
+    answer: "Porsche"
+  }
+];
+
+let current = 0;
+let score = 0;
+
+function startQuiz() {
+  current = 0;
+  score = 0;
+  document.getElementById("score").innerText = "";
+  showQuestion();
+}
+
+function showQuestion() {
+  let q = quiz[current];
+  document.getElementById("question").innerText = q.question;
+  let answersDiv = document.getElementById("answers");
+  answersDiv.innerHTML = "";
+  q.options.forEach(opt => {
+    let btn = document.createElement("button");
+    btn.innerText = opt;
+    btn.onclick = () => checkAnswer(opt);
+    answersDiv.appendChild(btn);
+  });
+}
+
+function checkAnswer(choice) {
+  if (choice === quiz[current].answer) {
+    alert("✅ Correct!");
+    score++;
+  } else {
+    alert("❌ Wrong! The correct answer is " + quiz[current].answer);
+  }
+  current++;
+  if (current < quiz.length) {
+    showQuestion();
+  } else {
+    document.getElementById("question").innerText = "🏁 Quiz Over!";
+    document.getElementById("answers").innerHTML = "";
+    document.getElementById("score").innerText = "You scored " + score + "/" + quiz.length;
+  }
+}
+</script>
+
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-  body {
-    margin: 0;
-    font-family: 'Montserrat', sans-serif;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: white;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    padding: 20px;
-  }
-  .container {
-    max-width: 600px;
-    width: 100%;
-  }
-  header {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  header h1 {
-    font-weight: 700;
-    font-size: 2.4rem;
-    margin: 0;
-    letter-spacing: 2px;
-  }
-  .controls {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-  }
-  select, input[type="text"] {
-    flex-grow: 1;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: none;
-    font-size: 1rem;
-    font-weight: 500;
-  }
-  button.toggle-btn {
-    background: #1db954;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 15px;
-    font-weight: 700;
-    cursor: pointer;
-    color: #0f2027;
-    transition: background-color 0.3s ease;
-  }
-  button.toggle-btn:hover {
-    background: #17a34a;
-  }
-  #carList {
-    max-height: 450px;
-    overflow-y: auto;
-    border-radius: 10px;
-    background: rgba(255 255 255 / 0.1);
-    padding: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.5);
-  }
-  .car-card {
-    background: rgba(255 255 255 / 0.12);
-    padding: 15px 20px;
-    border-radius: 10px;
-    margin-bottom: 12px;
-    cursor: pointer;
-    transition: background-color 0.25s ease;
-  }
-  .car-card:hover {
-    background: rgba(29, 185, 84, 0.4);
-  }
-  .car-title {
-    font-weight: 700;
-    font-size: 1.2rem;
-    margin: 0 0 5px 0;
-  }
-  .car-subtitle {
-    font-weight: 500;
-    font-size: 0.9rem;
-    opacity: 0.75;
-  }
-  /* Modal Styles */
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 100;
-    left: 0; top: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
-    justify-content: center;
-    align-items: center;
-  }
-  .modal.active { display: flex; }
-  .modal-content {
-    background: #121212;
-    padding: 25px 30px;
-    border-radius: 15px;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 0 20px #1db954aa;
-    color: white;
-    position: relative;
-    text-align: center;
-    font-weight: 500;
-  }
-  .modal-content h2 {
-    margin-top: 0;
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 15px;
-    letter-spacing: 1.2px;
-  }
-  button.close-btn {
-    position: absolute;
-    top: 12px; right: 12px;
-    background: #e63946;
-    border: none;
-    border-radius: 50%;
-    width: 30px; height: 30px;
-    font-weight: 700;
-    color: white;
-    cursor: pointer;
-    font-size: 1.1rem;
-    line-height: 1;
-  }
-  button.close-btn:hover { background: #c12735; }
-
-  /* Scrollbar */
-  #carList::-webkit-scrollbar { width: 8px; }
-  #carList::-webkit-scrollbar-thumb {
-    background-color: #1db954;
-    border-radius: 4px;
-  }
-
-  /* Quiz Styles */
-  .quiz-box {
-    margin-top: 40px;
-    background: rgba(255,255,255,0.1);
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.3);
-    text-align: center;
-  }
-  .quiz-box h2 {
-    margin-bottom: 15px;
-  }
-  .quiz-box button {
-    margin: 8px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    background: #1db954;
-    color: #0f2027;
-  }
-  .quiz-box button:hover {
-    background: #17a34a;
-  }
+.quiz-box {
+  max-width: 600px;
+  margin: 40px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  text-align: center;
+}
+.quiz-box h1 {
+  color: #333;
+}
+.quiz-box button {
+  margin: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  background: #0077ff;
+  color: white;
+  cursor: pointer;
+}
+.quiz-box button:hover {
+  background: #005fd1;
+}
 </style>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>Carz Info</h1>
-    </header>
-    <div class="controls">
-      <select id="brandFilter" onchange="renderCars()"></select>
-      <input type="text" id="search" placeholder="Search brand or model" oninput="renderCars()" />
-      <button class="toggle-btn" onclick="toggleCars()" id="toggleBtn">Show Cars</button>
-    </div>
-    <div id="carList"></div>
-
-    <!-- QUIZ SECTION -->
-    <div class="quiz-box">
-      <h2>🚗 Ultimate Car Quiz 🚗</h2>
-      <p id="quiz-question">Click Start to begin!</p>
-      <div id="quiz-answers"></div>
-      <button onclick="startQuiz()">Start Quiz</button>
-      <p id="quiz-score"></p>
-    </div>
-  </div>
-
-  <!-- Modal -->
-  <div class="modal" id="carModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal()">×</button>
-      <h2 id="modalTitle"></h2>
-      <p id="modalHorsepower"></p>
-      <p id="modalZero"></p>
-      <p id="modalSpeed"></p>
-    </div>
-  </div>
-
-  <script>
-    /* --- Your Cars Script (unchanged) --- */
-    const cars = [/* ... your car list here ... */];
-
-    let showCars = false;
-    function populateBrandFilter() {
-      const brandFilter = document.getElementById("brandFilter");
-      const brands = Array.from(new Set(cars.map(car => car.brand))).sort();
-      brandFilter.innerHTML = `<option value="all">All Brands</option>`;
-      brands.forEach(brand => {
-        brandFilter.innerHTML += `<option value="${brand}">${brand}</option>`;
-      });
-    }
-    function toggleCars() {
-      showCars = !showCars;
-      document.getElementById("toggleBtn").innerText = showCars ? "Hide Cars" : "Show Cars";
-      renderCars();
-    }
-    function renderCars() {
-      const searchText = document.getElementById("search").value.toLowerCase();
-      const brandFilter = document.getElementById("brandFilter").value;
-      const carList = document.getElementById("carList");
-      carList.innerHTML = "";
-      if (!showCars && searchText.trim() === "" && brandFilter === "all") return;
-      const filtered = cars.filter(car => {
-        const matchesBrand = brandFilter === "all" || car.brand === brandFilter;
-        const matchesSearch = car.brand.toLowerCase().includes(searchText) || car.model.toLowerCase().includes(searchText);
-        return matchesBrand && matchesSearch;
-      });
-      if(filtered.length === 0) {
-        carList.innerHTML = `<p style="text-align:center; color:#bbb; margin-top: 40px;">No cars found</p>`;
-        return;
-      }
-      filtered.forEach(car => {
-        const card = document.createElement("div");
-        card.className = "car-card";
-        card.innerHTML = `
-          <h3 class="car-title">${car.brand} ${car.model}</h3>
-          <p class="car-subtitle">Horsepower: ${car.horsepower} hp</p>
-          <p class="car-subtitle">0-100 km/h: ${car.zeroToHundred.toFixed(2)} sec</p>
-          <p class="car-subtitle">Top Speed: ${car.topSpeed} km/h</p>`;
-        card.onclick = () => openModal(car);
-        carList.appendChild(card);
-      });
-    }
-    function openModal(car) {
-      document.getElementById("modalTitle").innerText = `${car.brand} ${car.model}`;
-      document.getElementById("modalHorsepower").innerText = `Horsepower: ${car.horsepower} hp`;
-      document.getElementById("modalZero").innerText = `0-100 km/h: ${car.zeroToHundred.toFixed(2)} sec`;
-      document.getElementById("modalSpeed").innerText = `Top Speed: ${car.topSpeed} km/h`;
-      document.getElementById("carModal").classList.add("active");
-    }
-    function closeModal() { document.getElementById("carModal").classList.remove("active"); }
-    window.onload = () => { populateBrandFilter(); renderCars(); };
-
-    /* --- Car Quiz Script --- */
-    const quiz = [
-      { q: "Which company makes the Mustang?", options: ["Chevrolet","Ford","Dodge","Tesla"], a: "Ford" },
-      { q: "What does BMW stand for?", options: ["British Motor Works","Bayerische Motoren Werke","Berlin Motor World","Bavaria Motors West"], a: "Bayerische Motoren Werke" },
-      { q: "Which Italian brand uses a prancing horse as its logo?", options: ["Lamborghini","Ferrari","Maserati","Alfa Romeo"], a: "Ferrari" },
-      { q: "The Bugatti Veyron was once the fastest car in the world. True or False?", options: ["True","False"], a: "True" },
-      { q: "Which car company makes the '911' model?", options: ["McLaren","Porsche","Audi","Mercedes"], a: "Porsche" }
-    ];
-    let qIndex = 0, qScore = 0;
-
-    function startQuiz() {
-      qIndex = 0; qScore = 0;
-      document.getElementById("quiz-score").innerText = "";
-      showQuestion();
-    }
-    function showQuestion() {
-      let q = quiz[qIndex];
-      document.getElementById("quiz-question").innerText = q.q;
-      let answersDiv = document.getElementById("quiz-answers");
-      answersDiv.innerHTML = "";
-      q.options.forEach(opt => {
-        let btn = document.createElement("button");
-        btn.innerText = opt;
-        btn.onclick = () => checkAnswer(opt);
-        answersDiv.appendChild(btn);
-      });
-    }
-    function checkAnswer(choice) {
-      if (choice === quiz[qIndex].a) { alert("✅ Correct!"); qScore++; }
-      else { alert("❌ Wrong! Correct answer: " + quiz[qIndex].a); }
-      qIndex++;
-      if (qIndex < quiz.length) showQuestion();
-      else document.getElementById("quiz-score").innerText = `🏁 Quiz Over! Score: ${qScore}/${quiz.length}`;
-    }
-  </script>
-</body>
-</html>
+<!-- 🚗 End Quiz Section -->
